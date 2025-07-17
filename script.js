@@ -68,6 +68,196 @@ const inputLoanAmount = document.querySelector('.form__input--loan-amount');
 const inputCloseUsername = document.querySelector('.form__input--user');
 const inputClosePin = document.querySelector('.form__input--pin');
 
+const btnRegister = document.querySelector('.register-btn'); // кнопка реєстрації
+const inputRegisterOwner = document.getElementById('register-username');
+const inputRegisterPin = document.getElementById('register-password');
+const inputRegisterType = null; // або можна прибрати цю змінну
+
+const login = async function (e) {
+  e.preventDefault();
+
+  const username = inputLoginUsername.value;
+  const pin = Number(inputLoginPin.value);
+
+  try {
+    const response = await fetch('http://localhost:3000/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, pin }),
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || 'Login failed');
+
+    // Зберігаємо поточного користувача
+    currentAccount = data;
+
+    // Оновлюємо UI
+    updateUI(currentAccount);
+    containerApp.style.opacity = 100;
+    labelWelcome.textContent = `Welcome back, ${
+      currentAccount.owner.split(' ')[0]
+    }`;
+  } catch (err) {
+    console.error('Login error:', err.message);
+  }
+};
+
+const register = async function (e) {
+  e.preventDefault();
+
+  const owner = inputRegisterName.value;
+  const username = inputRegisterUsername.value;
+  const pin = Number(inputRegisterPin.value);
+
+  try {
+    const response = await fetch('http://localhost:3000/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ owner, username, pin }),
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || 'Registration failed');
+
+    // Автоматично логінимо
+    currentAccount = data;
+    updateUI(currentAccount);
+    containerApp.style.opacity = 100;
+    labelWelcome.textContent = `Welcome, ${currentAccount.owner.split(' ')[0]}`;
+  } catch (err) {
+    console.error('Registration error:', err.message);
+  }
+};
+
+btnRegister.addEventListener('click', function (e) {
+  e.preventDefault();
+
+  const owner = inputRegisterOwner.value.trim();
+  const pin = Number(inputRegisterPin.value);
+  const type = inputRegisterType ? inputRegisterType.value.trim() : 'basic';
+
+  if (!owner || !pin || pin.toString().length !== 4) {
+    alert("Будь ласка, введіть ім'я та 4-значний PIN");
+    return;
+  }
+
+  // Створення нового акаунта
+  const newAccount = {
+    owner: owner,
+    movements: [],
+    interestRate: 1, // можна зробити статично
+    pin: pin,
+    type: type,
+  };
+
+  // Створюємо username для нового акаунта (перші літери імені)
+  newAccount.username = owner
+    .toLowerCase()
+    .split(' ')
+    .map(name => name[0])
+    .join('');
+
+  accounts.push(newAccount);
+
+  // Оновити інтерфейс, якщо хочеш показати новий акаунт або логін
+  alert('Реєстрація успішна! Тепер можна увійти.');
+
+  // Очистити поля
+  inputRegisterOwner.value = inputRegisterPin.value = '';
+  if (inputRegisterType) inputRegisterType.value = '';
+
+  // Можеш викликати updateUI(newAccount); якщо хочеш одразу показати акаунт
+});
+const showRegisterBtn = document.getElementById('show-register');
+const registerModal = document.getElementById('register-modal');
+const closeRegisterBtn = document.getElementById('close-register');
+
+showRegisterBtn.addEventListener('click', () => {
+  registerModal.classList.remove('hidden');
+});
+
+closeRegisterBtn.addEventListener('click', () => {
+  registerModal.classList.add('hidden');
+});
+
+// Щоб закривати модалку при кліку поза формою
+registerModal.addEventListener('click', e => {
+  if (e.target === registerModal) {
+    registerModal.classList.add('hidden');
+  }
+});
+
+// Реєстрація
+const registerForm = document.getElementById('register-form');
+const registerMessage = document.getElementById('register-message');
+
+registerForm.addEventListener('submit', async function (e) {
+  e.preventDefault();
+
+  const username = document.getElementById('register-username').value;
+  const password = document.getElementById('register-password').value;
+
+  try {
+    const res = await fetch('http://localhost:3000/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+
+    const data = await res.json();
+    registerMessage.textContent = data.message;
+    registerMessage.style.color = res.ok ? 'green' : 'red';
+  } catch (err) {
+    registerMessage.textContent = 'Помилка зʼєднання з сервером';
+    registerMessage.style.color = 'red';
+  }
+});
+
+// Логін
+const loginForm = document.getElementById('login-form');
+const loginMessage = document.getElementById('login-message');
+
+loginForm.addEventListener('submit', async function (e) {
+  e.preventDefault();
+
+  const username = document.getElementById('login-username').value;
+  const password = document.getElementById('login-password').value;
+
+  try {
+    const res = await fetch('http://localhost:3000/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+
+    const data = await res.json();
+    loginMessage.textContent = data.message;
+    loginMessage.style.color = res.ok ? 'green' : 'red';
+
+    if (res.ok && data.token) {
+      localStorage.setItem('token', data.token);
+      console.log('Token:', data.token);
+    }
+  } catch (err) {
+    loginMessage.textContent = 'Помилка зʼєднання з сервером';
+    loginMessage.style.color = 'red';
+  }
+});
+
+if (res.ok && data.token) {
+  localStorage.setItem('token', data.token);
+
+  const accRes = await fetch('http://localhost:3000/account', {
+    headers: {
+      Authorization: `Bearer ${data.token}`,
+    },
+  });
+  const account = await accRes.json();
+  updateUI(account);
+  containerApp.style.opacity = 100;
+}
+
 const displayMovements = function (movements, sort = false) {
   containerMovements.innerHTML = ''; //HTMLcode
 
@@ -76,12 +266,12 @@ const displayMovements = function (movements, sort = false) {
   movs.forEach(function (mov, i) {
     const type = mov > 0 ? 'deposit' : 'withdrawal';
     const html = `    
-    <div class="movements__row">
-      <div class="movements__type movements__type--${type}">${
+      <div class="movements__row">
+        <div class="movements__type movements__type--${type}">${
       i + 1
     }${type}</div>
-        <div class="movements__value">${mov}€</div>
-    </div>`;
+          <div class="movements__value">${mov}€</div>
+      </div>`;
 
     containerMovements.insertAdjacentHTML('afterbegin', html); //де ми вставимо, код html для цього
   });
@@ -109,6 +299,15 @@ const calcDisplaySummary = function (acc) {
     .reduce((acc, int) => acc + int, 0);
   labelSumInterest.textContent = `${interest}€`;
 };
+
+const res = await fetch('http://localhost:3000/auth/login', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ username, password }),
+});
+const data = await res.json();
+currentAccount = data.user;
+updateUI(currentAccount);
 
 // calcDisplaySummary(account1.movements);
 

@@ -19,22 +19,56 @@
     <nav>
       <p class="welcome">Log in to get started</p>
       <img src="logo.png" alt="Logo" class="logo" />
-      <form class="login">
+
+      <!-- Додано id для логін форми -->
+      <form id="login-form" class="login">
         <input
           type="text"
+          id="login-username"
           placeholder="user"
           class="login__input login__input--user"
+          required
         />
-        <!-- In practice, use type="password" -->
         <input
-          type="text"
+          type="password"
+          id="login-password"
           placeholder="PIN"
           maxlength="4"
           class="login__input login__input--pin"
+          required
         />
-        <button class="login__btn">&rarr;</button>
+        <button class="login__btn" type="submit">&rarr;</button>
+        <button id="show-register" type="button" class="register-btn">
+          Register
+        </button>
       </form>
     </nav>
+
+    <!-- Модальне вікно для реєстрації -->
+    <div id="register-modal" class="modal hidden">
+      <div class="modal-content">
+        <button id="close-register" class="close-btn">&times;</button>
+        <form id="register-form" class="register-form">
+          <h2>Register</h2>
+          <input
+            type="text"
+            id="register-username"
+            placeholder="Username"
+            required
+            class="register__input"
+          />
+          <input
+            type="password"
+            id="register-password"
+            placeholder="Password"
+            required
+            class="register__input"
+          />
+          <button type="submit" class="register__btn">Register</button>
+          <div id="register-message"></div>
+        </form>
+      </div>
+    </div>
 
     <main class="app">
       <!-- BALANCE -->

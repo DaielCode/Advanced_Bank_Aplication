@@ -6,8 +6,11 @@ const jwt = require('jsonwebtoken');
 
 const router = express.Router();
 
-const usersFilePath = path.join(process.cwd(), 'bankist-backend', 'users.json');
-const JWT_SECRET = 'тут_повинен_бути_секретний_ключ_великими_літерами'; // Заміни на свій секрет!
+// Визначаємо шлях до users.json відносно поточного файлу
+const usersFilePath = path.join(__dirname, '..', 'users.json');
+
+// Секретний ключ для JWT (краще зберігати у .env файлі)
+const JWT_SECRET = 'ТУТ_ПОВИНЕН_БУТИ_СЕКРЕТНИЙ_КЛЮЧ_ВЕЛИКИМИ_ЛІТЕРАМИ';
 
 function readUsers() {
   try {
@@ -23,7 +26,7 @@ function writeUsers(users) {
   fs.writeFileSync(usersFilePath, JSON.stringify(users, null, 2));
 }
 
-// Реєстрація (оновлено для хешування пароля)
+// Реєстрація з хешуванням пароля
 router.post('/register', async (req, res) => {
   const { username, password } = req.body;
 
@@ -44,7 +47,7 @@ router.post('/register', async (req, res) => {
   res.status(201).json({ message: 'Користувача зареєстровано успішно!' });
 });
 
-// Логін
+// Логін із перевіркою пароля та створенням JWT
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
 
@@ -60,6 +63,30 @@ router.post('/login', async (req, res) => {
       .json({ message: 'Неправильне імʼя користувача або пароль' });
   }
 
+  res.json({
+    user: {
+      username: account.username,
+      owner: account.owner,
+      type: account.type,
+      interestRate: account.interestRate,
+      movements: account.movements,
+      balance: account.balance,
+    },
+  });
+
+  const newAccount = new Account({
+    username,
+    password: hashedPassword,
+    owner,
+    type: 'basic',
+    interestRate: 1.2,
+    movements: [],
+    balance: 0,
+  });
+
+  await newAccount.save();
+  res.status(201).json({ message: 'User registered!' });
+
   const passwordMatch = await bcrypt.compare(password, user.password);
   if (!passwordMatch) {
     return res
@@ -67,7 +94,6 @@ router.post('/login', async (req, res) => {
       .json({ message: 'Неправильне імʼя користувача або пароль' });
   }
 
-  // Створюємо JWT токен
   const token = jwt.sign({ username: user.username }, JWT_SECRET, {
     expiresIn: '1h',
   });

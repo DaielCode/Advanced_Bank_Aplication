@@ -1,11 +1,44 @@
+const mongoose = require('mongoose');
+
+mongoose
+  .connect('mongodb://localhost:27017/bankist', {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log('✅ MongoDB connected'))
+  .catch(err => console.log('❌ MongoDB connection error:', err));
+
 const express = require('express');
+const authRouter = require('./routes/auth');
+const accountRoutes = require('./routes/account');
+
+const cors = require('cors');
 const app = express();
-const authRoutes = require('./routes/auth');
+
+app.use(
+  cors({
+    origin: 'http://127.0.0.1:5500', // тут вкажи адресу твого фронтенда
+  })
+);
+
+// інші middleware і маршрути
+
+const authenticateToken = require('./middleware/authMiddleware');
 
 app.use(express.json());
-app.use('/auth', authRoutes);
+
+mongoose.connect('mongodb://localhost:27017/bankist');
+
+app.use('/auth', authRouter);
+
+app.use('/accounts', accountRoutes);
+
+// Захищений роут
+app.get('/protected', authenticateToken, (req, res) => {
+  res.json({
+    message: `Привіт, ${req.user.username}! Це захищена інформація.`,
+  });
+});
 
 const PORT = 3000;
-app.listen(PORT, () => {
-  console.log(`Сервер запущено на порту ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
