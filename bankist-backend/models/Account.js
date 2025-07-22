@@ -1,21 +1,12 @@
-const express = require('express');
-const Account = require('../models/Account');
+const mongoose = require('mongoose');
 
-const router = express.Router();
-
-// Оновлення балансу, транзакцій тощо
-router.patch('/update', async (req, res) => {
-  const { username, movements, balance } = req.body;
-
-  const account = await Account.findOne({ username });
-  if (!account) return res.status(404).json({ message: 'Account not found' });
-
-  account.movements = movements;
-  account.balance = balance;
-
-  await account.save();
-
-  res.json({ message: 'Account updated' });
+const accountSchema = new mongoose.Schema({
+  username: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  balance: { type: Number, default: 0 },
+  movements: { type: [Number], default: [] },
 });
 
-module.exports = router;
+const Account = mongoose.model('Account', accountSchema);
+
+module.exports = Account;

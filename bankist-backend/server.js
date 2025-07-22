@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+require('dotenv').config();
 
 mongoose
   .connect('mongodb://localhost:27017/bankist', {
@@ -10,7 +11,7 @@ mongoose
 
 const express = require('express');
 const authRouter = require('./routes/auth');
-const accountRoutes = require('./routes/account');
+const accountRoutes = require('./routes/accountRoutes'); // або правильна назва твого файлу
 
 const cors = require('cors');
 const app = express();
@@ -18,6 +19,7 @@ const app = express();
 app.use(
   cors({
     origin: 'http://127.0.0.1:5500', // тут вкажи адресу твого фронтенда
+    credentials: true,
   })
 );
 

@@ -73,102 +73,60 @@ const inputRegisterOwner = document.getElementById('register-username');
 const inputRegisterPin = document.getElementById('register-password');
 const inputRegisterType = null; // або можна прибрати цю змінну
 
-const login = async function (e) {
-  e.preventDefault();
-
-  const username = inputLoginUsername.value;
-  const pin = Number(inputLoginPin.value);
-
+async function login(username, password) {
   try {
-    const response = await fetch('http://localhost:3000/auth/login', {
+    const res = await fetch('http://localhost:3000/accounts/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, pin }),
+      body: JSON.stringify({ username, password }),
     });
 
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || 'Login failed');
-
-    // Зберігаємо поточного користувача
-    currentAccount = data;
-
-    // Оновлюємо UI
-    updateUI(currentAccount);
-    containerApp.style.opacity = 100;
-    labelWelcome.textContent = `Welcome back, ${
-      currentAccount.owner.split(' ')[0]
-    }`;
+    const data = await res.json();
+    if (res.ok) {
+      localStorage.setItem('token', data.token); // Зберегти токен
+      console.log('Login successful!');
+      getAccountData(); // виклик наступної функції
+    } else {
+      alert(data.message);
+    }
   } catch (err) {
-    console.error('Login error:', err.message);
+    console.error('Login error:', err);
   }
-};
+}
 
 const register = async function (e) {
   e.preventDefault();
 
-  const owner = inputRegisterName.value;
-  const username = inputRegisterUsername.value;
-  const pin = Number(inputRegisterPin.value);
+  const username = inputRegisterOwner.value.trim();
+  const password = inputRegisterPin.value;
+
+  if (!username || !password) {
+    alert('Введіть імʼя користувача і пароль');
+    return;
+  }
 
   try {
     const response = await fetch('http://localhost:3000/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ owner, username, pin }),
+      body: JSON.stringify({ username, password }),
     });
 
     const data = await response.json();
+
     if (!response.ok) throw new Error(data.message || 'Registration failed');
 
-    // Автоматично логінимо
-    currentAccount = data;
-    updateUI(currentAccount);
-    containerApp.style.opacity = 100;
-    labelWelcome.textContent = `Welcome, ${currentAccount.owner.split(' ')[0]}`;
+    alert('Реєстрація успішна! Тепер увійдіть.');
+
+    // Тут можна автоматично викликати логін, якщо хочеш
+    // await login(username, password);
   } catch (err) {
-    console.error('Registration error:', err.message);
+    alert(`Помилка: ${err.message}`);
   }
 };
 
-btnRegister.addEventListener('click', function (e) {
-  e.preventDefault();
+btnRegister.addEventListener('click', register);
 
-  const owner = inputRegisterOwner.value.trim();
-  const pin = Number(inputRegisterPin.value);
-  const type = inputRegisterType ? inputRegisterType.value.trim() : 'basic';
-
-  if (!owner || !pin || pin.toString().length !== 4) {
-    alert("Будь ласка, введіть ім'я та 4-значний PIN");
-    return;
-  }
-
-  // Створення нового акаунта
-  const newAccount = {
-    owner: owner,
-    movements: [],
-    interestRate: 1, // можна зробити статично
-    pin: pin,
-    type: type,
-  };
-
-  // Створюємо username для нового акаунта (перші літери імені)
-  newAccount.username = owner
-    .toLowerCase()
-    .split(' ')
-    .map(name => name[0])
-    .join('');
-
-  accounts.push(newAccount);
-
-  // Оновити інтерфейс, якщо хочеш показати новий акаунт або логін
-  alert('Реєстрація успішна! Тепер можна увійти.');
-
-  // Очистити поля
-  inputRegisterOwner.value = inputRegisterPin.value = '';
-  if (inputRegisterType) inputRegisterType.value = '';
-
-  // Можеш викликати updateUI(newAccount); якщо хочеш одразу показати акаунт
-});
 const showRegisterBtn = document.getElementById('show-register');
 const registerModal = document.getElementById('register-modal');
 const closeRegisterBtn = document.getElementById('close-register');
@@ -232,31 +190,35 @@ loginForm.addEventListener('submit', async function (e) {
     });
 
     const data = await res.json();
-    loginMessage.textContent = data.message;
+    loginMessage.textContent = data.message || '';
     loginMessage.style.color = res.ok ? 'green' : 'red';
 
     if (res.ok && data.token) {
       localStorage.setItem('token', data.token);
-      console.log('Token:', data.token);
+
+      // Запит даних акаунта після логіну
+      const accRes = await fetch('http://localhost:3000/api/accounts/me', {
+        headers: { Authorization: `Bearer ${data.token}` },
+      });
+      const account = await accRes.json();
+
+      if (accRes.ok) {
+        updateUI(account);
+        containerApp.style.opacity = 100;
+        labelWelcome.textContent = `Welcome back, ${
+          account.owner.split(' ')[0]
+        }`;
+      } else {
+        loginMessage.textContent =
+          account.message || 'Failed to load account data';
+        loginMessage.style.color = 'red';
+      }
     }
   } catch (err) {
     loginMessage.textContent = 'Помилка зʼєднання з сервером';
     loginMessage.style.color = 'red';
   }
 });
-
-if (res.ok && data.token) {
-  localStorage.setItem('token', data.token);
-
-  const accRes = await fetch('http://localhost:3000/account', {
-    headers: {
-      Authorization: `Bearer ${data.token}`,
-    },
-  });
-  const account = await accRes.json();
-  updateUI(account);
-  containerApp.style.opacity = 100;
-}
 
 const displayMovements = function (movements, sort = false) {
   containerMovements.innerHTML = ''; //HTMLcode
@@ -299,15 +261,6 @@ const calcDisplaySummary = function (acc) {
     .reduce((acc, int) => acc + int, 0);
   labelSumInterest.textContent = `${interest}€`;
 };
-
-const res = await fetch('http://localhost:3000/auth/login', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ username, password }),
-});
-const data = await res.json();
-currentAccount = data.user;
-updateUI(currentAccount);
 
 // calcDisplaySummary(account1.movements);
 
@@ -360,6 +313,26 @@ btnLogin.addEventListener('click', function (e) {
     updateUI(CurrentAccount);
   }
 });
+
+async function getAccountData() {
+  try {
+    const token = localStorage.getItem('token');
+    const res = await fetch('http://localhost:3000/api/accounts/me', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const account = await res.json();
+
+    if (res.ok) {
+      console.log('Account data:', account);
+      updateUI(account); // функція для оновлення інтерфейсу
+    } else {
+      console.error('Failed to fetch account data:', account.message);
+    }
+  } catch (err) {
+    console.error('Error fetching account:', err);
+  }
+}
 
 const calcDisplayPrintBalance = function (acc) {
   acc.balance = acc.movements.reduce((acc, mov) => acc + mov, 0);
