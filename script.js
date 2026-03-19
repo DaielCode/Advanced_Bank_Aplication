@@ -1,50 +1,43 @@
 'use strict';
 
-// const { captureOwnerStack } = require('react');
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js';
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+} from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDoc,
+  updateDoc,
+  deleteDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+} from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js';
 
-/////////////////////////////////////////////////
-/////////////////////////////////////////////////
-// BANKIST APP
-const movements = [200, 450, -400, 3000, -650, -130, 70, 1300];
-
-// console.log(movements.findLastIndex(mov => mov > 1000));
-// Data
-const account1 = {
-  owner: 'Jonas Schmedtmann',
-  movements: [200, 450, -400, 3000, -650, -130, 70, 1300],
-  interestRate: 1.2, // %
-  pin: 1111,
-  type: 'premium',
+// ── Firebase init ─────────────────────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: 'AIzaSyAkDfKV0hAb3TCy_veb3HM36-EVgysr4es',
+  authDomain: 'yourbank-24b06.firebaseapp.com',
+  projectId: 'yourbank-24b06',
+  storageBucket: 'yourbank-24b06.firebasestorage.app',
+  messagingSenderId: '672073381633',
+  appId: '1:672073381633:web:ffc5a3b60c8f6d32660d00',
 };
 
-const account2 = {
-  owner: 'Jessica Davis',
-  movements: [5000, 3400, -150, -790, -3210, -1000, 8500, -30],
-  interestRate: 1.5,
-  pin: 2222,
-  type: 'standard',
-};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-const account3 = {
-  owner: 'Steven Thomas Williams',
-  movements: [200, -200, 340, -300, -20, 50, 400, -460],
-  interestRate: 0.7,
-  pin: 3333,
-  type: 'premium',
-};
-
-const account4 = {
-  owner: 'Sarah Smith',
-  movements: [430, 1000, 700, 50, 90],
-  interestRate: 1,
-  pin: 4444,
-  type: 'basic',
-};
-
-const accounts = [account1, account2, account3, account4];
-// Elements
+// ── UI Elements ───────────────────────────────────────────────────────────────
 const labelWelcome = document.querySelector('.welcome');
-const labelDate = document.querySelector('.date');
 const labelBalance = document.querySelector('.balance__value');
 const labelSumIn = document.querySelector('.summary__value--in');
 const labelSumOut = document.querySelector('.summary__value--out');
@@ -54,524 +47,486 @@ const labelTimer = document.querySelector('.timer');
 const containerApp = document.querySelector('.app');
 const containerMovements = document.querySelector('.movements');
 
-const btnLogin = document.querySelector('.login__btn');
 const btnTransfer = document.querySelector('.form__btn--transfer');
 const btnLoan = document.querySelector('.form__btn--loan');
 const btnClose = document.querySelector('.form__btn--close');
 const btnSort = document.querySelector('.btn--sort');
 
-const inputLoginUsername = document.querySelector('.login__input--user');
-const inputLoginPin = document.querySelector('.login__input--pin');
 const inputTransferTo = document.querySelector('.form__input--to');
 const inputTransferAmount = document.querySelector('.form__input--amount');
 const inputLoanAmount = document.querySelector('.form__input--loan-amount');
 const inputCloseUsername = document.querySelector('.form__input--user');
 const inputClosePin = document.querySelector('.form__input--pin');
 
-const btnRegister = document.querySelector('.register-btn'); // кнопка реєстрації
-const inputRegisterOwner = document.getElementById('register-username');
-const inputRegisterPin = document.getElementById('register-password');
-const inputRegisterType = null; // або можна прибрати цю змінну
-
-async function login(username, password) {
-  try {
-    const res = await fetch('http://localhost:3000/accounts/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
-    });
-
-    const data = await res.json();
-    if (res.ok) {
-      localStorage.setItem('token', data.token); // Зберегти токен
-      console.log('Login successful!');
-      getAccountData(); // виклик наступної функції
-    } else {
-      alert(data.message);
-    }
-  } catch (err) {
-    console.error('Login error:', err);
-  }
-}
-
-const register = async function (e) {
-  e.preventDefault();
-
-  const username = inputRegisterOwner.value.trim();
-  const password = inputRegisterPin.value;
-
-  if (!username || !password) {
-    alert('Введіть імʼя користувача і пароль');
-    return;
-  }
-
-  try {
-    const response = await fetch('http://localhost:3000/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) throw new Error(data.message || 'Registration failed');
-
-    alert('Реєстрація успішна! Тепер увійдіть.');
-
-    // Тут можна автоматично викликати логін, якщо хочеш
-    // await login(username, password);
-  } catch (err) {
-    alert(`Помилка: ${err.message}`);
-  }
-};
-
-btnRegister.addEventListener('click', register);
-
-const showRegisterBtn = document.getElementById('show-register');
-const registerModal = document.getElementById('register-modal');
-const closeRegisterBtn = document.getElementById('close-register');
-
-showRegisterBtn.addEventListener('click', () => {
-  registerModal.classList.remove('hidden');
-});
-
-closeRegisterBtn.addEventListener('click', () => {
-  registerModal.classList.add('hidden');
-});
-
-// Щоб закривати модалку при кліку поза формою
-registerModal.addEventListener('click', e => {
-  if (e.target === registerModal) {
-    registerModal.classList.add('hidden');
-  }
-});
-
-// Реєстрація
-const registerForm = document.getElementById('register-form');
-const registerMessage = document.getElementById('register-message');
-
-registerForm.addEventListener('submit', async function (e) {
-  e.preventDefault();
-
-  const username = document.getElementById('register-username').value;
-  const password = document.getElementById('register-password').value;
-
-  try {
-    const res = await fetch('http://localhost:3000/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
-    });
-
-    const data = await res.json();
-    registerMessage.textContent = data.message;
-    registerMessage.style.color = res.ok ? 'green' : 'red';
-  } catch (err) {
-    registerMessage.textContent = 'Помилка зʼєднання з сервером';
-    registerMessage.style.color = 'red';
-  }
-});
-
-// Логін
 const loginForm = document.getElementById('login-form');
 const loginMessage = document.getElementById('login-message');
+const registerForm = document.getElementById('register-form');
+const registerMessage = document.getElementById('register-message');
+const registerModal = document.getElementById('register-modal');
+const showRegisterBtn = document.getElementById('show-register');
+const closeRegisterBtn = document.getElementById('close-register');
+const landing = document.getElementById('landing');
+const siteFooter = document.getElementById('site-footer');
+const welcomeBanner = document.getElementById('welcome-banner');
+const closeBannerBtn = document.getElementById('close-welcome-banner');
+const bannerProgressBar = document.getElementById('banner-progress-bar');
 
-loginForm.addEventListener('submit', async function (e) {
-  e.preventDefault();
+// ── Currencies config ─────────────────────────────────────────────────────────
+const CURRENCIES = [
+  { code: 'EUR', prefix: 'EU',  locale: 'de-DE', flag: '🇪🇺', name: 'Euro' },
+  { code: 'USD', prefix: 'US',  locale: 'en-US', flag: '🇺🇸', name: 'US Dollar' },
+  { code: 'GBP', prefix: 'GB',  locale: 'en-GB', flag: '🇬🇧', name: 'British Pound' },
+  { code: 'PLN', prefix: 'PL',  locale: 'pl-PL', flag: '🇵🇱', name: 'Polish Złoty' },
+  { code: 'UAH', prefix: 'UA',  locale: 'uk-UA', flag: '🇺🇦', name: 'Ukrainian Hryvnia' },
+  { code: 'CHF', prefix: 'CH',  locale: 'de-CH', flag: '🇨🇭', name: 'Swiss Franc' },
+];
 
-  const username = document.getElementById('login-username').value;
-  const password = document.getElementById('login-password').value;
+// ── App State ─────────────────────────────────────────────────────────────────
+let currentAccount = null;
+let currentUser = null;
+let sorted = false;
+let timerInterval;
+let exchangeRates = { EUR: 1 };
+let displayCurrency = localStorage.getItem('yb_currency') || 'EUR';
 
+// ── Firestore helpers ─────────────────────────────────────────────────────────
+const userRef = uid => doc(db, 'users', uid);
+
+const loadAccount = async uid => {
+  const snap = await getDoc(userRef(uid));
+  if (!snap.exists()) throw new Error('Account not found');
+  return snap.data();
+};
+
+const addMovement = async (uid, amount) => {
+  const snap = await getDoc(userRef(uid));
+  const movements = [...snap.data().movements, amount];
+  await updateDoc(userRef(uid), { movements });
+};
+
+// ── Exchange Rates ────────────────────────────────────────────────────────────
+const ratesPanel = document.getElementById('rates-panel');
+const ratesList = document.getElementById('rates-list');
+const ratesDate = document.getElementById('rates-date');
+const ratesUpdatedTime = document.getElementById('rates-updated-time');
+const toggleRatesBtn = document.getElementById('toggle-rates');
+const closeRatesBtn = document.getElementById('close-rates-panel');
+
+toggleRatesBtn.addEventListener('click', () => ratesPanel.classList.toggle('hidden'));
+closeRatesBtn.addEventListener('click', () => ratesPanel.classList.add('hidden'));
+document.getElementById('landing-view-rates-btn').addEventListener('click', () => ratesPanel.classList.remove('hidden'));
+
+// rates always stored as "X per 1 EUR" (base = EUR from API)
+let ratesBaseCurrency = 'EUR';
+const SPREAD = 0.015; // 1.5% buy/sell spread
+
+// rate of 1 BASE → TARGET using EUR-based rates
+const getRate = (base, target) => {
+  if (base === target) return 1;
+  return exchangeRates[target] / exchangeRates[base];
+};
+
+const renderRatesPanel = () => {
+  ratesList.innerHTML = CURRENCIES
+    .filter(c => c.code !== ratesBaseCurrency)
+    .map(c => {
+      const mid = getRate(ratesBaseCurrency, c.code);
+      const buy  = mid * (1 - SPREAD);
+      const sell = mid * (1 + SPREAD);
+      const decimals = mid >= 10 ? 2 : mid >= 1 ? 4 : 6;
+      return `
+        <div class="rates-row">
+          <span class="rates-row__flag">${c.flag}</span>
+          <div class="rates-row__info">
+            <span class="rates-row__code">${c.code}</span>
+            <span class="rates-row__name">${c.name}</span>
+          </div>
+          <div class="rates-row__bs">
+            <div class="rates-row__bs-item">
+              <span class="rates-row__bs-label">BUY</span>
+              <span class="rates-row__bs-val rates-row__bs-val--buy">${buy.toFixed(decimals)}</span>
+            </div>
+            <div class="rates-row__bs-item">
+              <span class="rates-row__bs-label">SELL</span>
+              <span class="rates-row__bs-val rates-row__bs-val--sell">${sell.toFixed(decimals)}</span>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+};
+
+const fetchRates = async () => {
   try {
-    const res = await fetch('http://localhost:3000/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
-    });
-
+    // exchangerate-api.com free v4 — supports UAH
+    const res = await fetch('https://api.exchangerate-api.com/v4/latest/EUR');
     const data = await res.json();
-    loginMessage.textContent = data.message || '';
-    loginMessage.style.color = res.ok ? 'green' : 'red';
+    exchangeRates = data.rates; // already has EUR:1 included
 
-    if (res.ok && data.token) {
-      localStorage.setItem('token', data.token);
+    const now = new Date();
+    const timeStr = `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+    ratesDate.textContent = data.date;
+    ratesUpdatedTime.textContent = `Updated at ${timeStr}`;
 
-      // Запит даних акаунта після логіну
-      const accRes = await fetch('http://localhost:3000/api/accounts/me', {
-        headers: { Authorization: `Bearer ${data.token}` },
-      });
-      const account = await accRes.json();
-
-      if (accRes.ok) {
-        updateUI(account);
-        containerApp.style.opacity = 100;
-        labelWelcome.textContent = `Welcome back, ${
-          account.owner.split(' ')[0]
-        }`;
-      } else {
-        loginMessage.textContent =
-          account.message || 'Failed to load account data';
-        loginMessage.style.color = 'red';
-      }
+    // Update landing rates grid
+    const landingGrid = document.getElementById('landing-rates-grid');
+    const landingTime = document.getElementById('landing-rates-time');
+    if (landingTime) landingTime.textContent = `${data.date} · ${timeStr}`;
+    if (landingGrid) {
+      landingGrid.innerHTML = CURRENCIES.map(c => {
+        const mid = getRate('EUR', c.code);
+        const decimals = mid >= 10 ? 2 : mid >= 1 ? 4 : 6;
+        const formatted = c.code === 'EUR' ? '1.0000' : mid.toFixed(decimals);
+        return `
+          <div class="landing__rate-card">
+            <span class="landing__rate-prefix">${c.prefix}</span>
+            <span class="landing__rate-code">${c.code}</span>
+            <span class="landing__rate-name">${c.name}</span>
+            <span class="landing__rate-value">${formatted}</span>
+          </div>`;
+      }).join('');
     }
+
+    renderRatesPanel();
+    if (currentAccount) updateUI(currentAccount);
   } catch (err) {
-    loginMessage.textContent = 'Помилка зʼєднання з сервером';
-    loginMessage.style.color = 'red';
+    ratesList.innerHTML = '<div class="rates-loading rates-error">Failed to load rates. Check connection.</div>';
   }
+};
+
+// Base currency switcher
+document.getElementById('rates-base-btns').addEventListener('click', e => {
+  const btn = e.target.closest('.rates-base-btn');
+  if (!btn) return;
+  ratesBaseCurrency = btn.dataset.base;
+  document.querySelectorAll('.rates-base-btn').forEach(b =>
+    b.classList.toggle('active', b === btn)
+  );
+  const base = CURRENCIES.find(c => c.code === ratesBaseCurrency);
+  ratesDate.textContent = `1 ${base.flag} ${ratesBaseCurrency} = ...`;
+  renderRatesPanel();
 });
 
-const displayMovements = function (movements, sort = false) {
-  containerMovements.innerHTML = ''; //HTMLcode
+// Landing CTA buttons
+document.getElementById('landing-register-btn').addEventListener('click', () =>
+  registerModal.classList.remove('hidden')
+);
+document.getElementById('landing-signin-btn').addEventListener('click', () =>
+  document.getElementById('login-username').focus()
+);
 
-  const movs = sort ? movements.slice().sort((a, b) => a - b) : movements;
+// Fetch on load + refresh every 10 minutes
+fetchRates();
+setInterval(fetchRates, 10 * 60 * 1000);
 
+// ── Currency Switcher ─────────────────────────────────────────────────────────
+const currencyBtns = document.querySelectorAll('.currency-btn');
+
+const setActiveCurrencyBtn = () => {
+  currencyBtns.forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.currency === displayCurrency);
+  });
+};
+
+setActiveCurrencyBtn();
+
+currencyBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    displayCurrency = btn.dataset.currency;
+    localStorage.setItem('yb_currency', displayCurrency);
+    setActiveCurrencyBtn();
+    if (currentAccount) updateUI(currentAccount);
+  });
+});
+
+// ── Formatting ────────────────────────────────────────────────────────────────
+const formatCurrency = eurValue => {
+  const rate = exchangeRates[displayCurrency] ?? 1;
+  const converted = eurValue * rate;
+  const curr = CURRENCIES.find(c => c.code === displayCurrency) || CURRENCIES[0];
+  return new Intl.NumberFormat(curr.locale, {
+    style: 'currency',
+    currency: displayCurrency,
+  }).format(converted);
+};
+
+// ── UI Render ─────────────────────────────────────────────────────────────────
+const displayMovements = function (acc, sort = false) {
+  containerMovements.innerHTML = '';
+  const movs = sort ? [...acc.movements].sort((a, b) => a - b) : acc.movements;
   movs.forEach(function (mov, i) {
     const type = mov > 0 ? 'deposit' : 'withdrawal';
-    const html = `    
+    const html = `
       <div class="movements__row">
-        <div class="movements__type movements__type--${type}">${
-      i + 1
-    }${type}</div>
-          <div class="movements__value">${mov}€</div>
+        <div class="movements__type movements__type--${type}">${i + 1} ${type}</div>
+        <div class="movements__value">${formatCurrency(mov)}</div>
       </div>`;
-
-    containerMovements.insertAdjacentHTML('afterbegin', html); //де ми вставимо, код html для цього
+    containerMovements.insertAdjacentHTML('afterbegin', html);
   });
 };
 
-// displayMovements(account1.movements);
+const calcDisplayBalance = function (acc) {
+  acc.balance = acc.movements.reduce((sum, mov) => sum + mov, 0);
+  labelBalance.textContent = formatCurrency(acc.balance);
+};
 
 const calcDisplaySummary = function (acc) {
-  const incomes = acc.movements
-    .filter(mov => mov > 0)
-    .reduce((acc, mov) => acc + mov, 0);
-  labelSumIn.textContent = `${incomes}€`;
+  const incomes = acc.movements.filter(m => m > 0).reduce((s, m) => s + m, 0);
+  labelSumIn.textContent = formatCurrency(incomes);
 
-  const out = acc.movements
-    .filter(mov => mov < 0)
-    .reduce((acc, mov) => acc + mov, 0);
-  labelSumOut.textContent = `${Math.abs(out)}€`;
+  const out = acc.movements.filter(m => m < 0).reduce((s, m) => s + m, 0);
+  labelSumOut.textContent = formatCurrency(Math.abs(out));
 
   const interest = acc.movements
-    .filter(mov => mov > 0)
-    .map(deposit => (deposit * acc.interestRate) / 100)
-    .filter(int => {
-      return int >= 1;
-    })
-    .reduce((acc, int) => acc + int, 0);
-  labelSumInterest.textContent = `${interest}€`;
-};
-
-// calcDisplaySummary(account1.movements);
-
-btnLoan.addEventListener('click', function (e) {
-  e.preventDefault();
-  const amount = Number(inputLoanAmount.value);
-
-  if (amount > 0 && CurrentAccount.movements.some(mov => mov >= amount * 0.1)) {
-    CurrentAccount.movements.push(amount);
-
-    updateUI(CurrentAccount);
-  }
-  inputLoanAmount.value = '';
-});
-
-const createUsernames = function (accs) {
-  accs.forEach(function (acc) {
-    acc.username = acc.owner
-      .toLowerCase()
-      .split(' ')
-      .map(name => name[0])
-      .join('');
-  });
+    .filter(m => m > 0)
+    .map(d => (d * acc.interestRate) / 100)
+    .filter(i => i >= 1)
+    .reduce((s, i) => s + i, 0);
+  labelSumInterest.textContent = formatCurrency(interest);
 };
 
 const updateUI = function (acc) {
-  displayMovements(acc.movements);
-  calcDisplayPrintBalance(acc);
+  displayMovements(acc, sorted);
+  calcDisplayBalance(acc);
   calcDisplaySummary(acc);
 };
 
-createUsernames(accounts);
-
-let CurrentAccount;
-
-btnLogin.addEventListener('click', function (e) {
-  e.preventDefault();
-
-  CurrentAccount = accounts.find(
-    acc => acc.username === inputLoginUsername.value
-  );
-
-  if (CurrentAccount?.pin === Number(inputLoginPin.value)) {
-    labelWelcome.textContent = `Welcome back, ${
-      CurrentAccount.owner.split(' ')[0]
-    }`;
-    containerApp.style.opacity = 100;
-    inputLoginPin.value = inputLoginUsername.value = '';
-    inputLoginPin.blur();
-    updateUI(CurrentAccount);
-  }
-});
-
-async function getAccountData() {
-  try {
-    const token = localStorage.getItem('token');
-    const res = await fetch('http://localhost:3000/api/accounts/me', {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    const account = await res.json();
-
-    if (res.ok) {
-      console.log('Account data:', account);
-      updateUI(account); // функція для оновлення інтерфейсу
-    } else {
-      console.error('Failed to fetch account data:', account.message);
-    }
-  } catch (err) {
-    console.error('Error fetching account:', err);
-  }
-}
-
-const calcDisplayPrintBalance = function (acc) {
-  acc.balance = acc.movements.reduce((acc, mov) => acc + mov, 0);
-
-  labelBalance.textContent = `${acc.balance}€`;
+const showError = (el, msg) => {
+  if (!el) return;
+  el.textContent = msg;
+  el.style.color = 'red';
 };
 
-// calcDisplayPrintBalance(account1.movements);
+const showSuccess = (el, msg) => {
+  if (!el) return;
+  el.textContent = msg;
+  el.style.color = 'green';
+};
 
-const deposits = movements.filter(function (mov) {
-  return mov > 0;
+// ── Logout Timer ──────────────────────────────────────────────────────────────
+const startLogoutTimer = function () {
+  if (timerInterval) clearInterval(timerInterval);
+  let time = 300;
+
+  const tick = async () => {
+    const min = String(Math.trunc(time / 60)).padStart(2, '0');
+    const sec = String(time % 60).padStart(2, '0');
+    labelTimer.textContent = `${min}:${sec}`;
+
+    if (time === 0) {
+      clearInterval(timerInterval);
+      await signOut(auth);
+      labelWelcome.textContent = 'Log in to get started';
+      containerApp.style.opacity = 0;
+      containerApp.classList.add('hidden');
+      landing.classList.remove('hidden');
+      siteFooter.classList.remove('hidden');
+      currentAccount = null;
+      currentUser = null;
+    }
+    time--;
+  };
+
+  tick();
+  timerInterval = setInterval(tick, 1000);
+};
+
+// ── Welcome Banner ────────────────────────────────────────────────────────────
+let bannerTimeout;
+
+const showWelcomeBanner = () => {
+  welcomeBanner.classList.remove('hidden');
+  // Animate progress bar to 0% over 8 seconds
+  bannerProgressBar.style.transition = 'none';
+  bannerProgressBar.style.width = '100%';
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      bannerProgressBar.style.transition = 'width 8s linear';
+      bannerProgressBar.style.width = '0%';
+    });
+  });
+  bannerTimeout = setTimeout(closeWelcomeBanner, 8000);
+};
+
+const closeWelcomeBanner = () => {
+  welcomeBanner.classList.add('banner-hide');
+  setTimeout(() => {
+    welcomeBanner.classList.add('hidden');
+    welcomeBanner.classList.remove('banner-hide');
+  }, 400);
+  clearTimeout(bannerTimeout);
+};
+
+closeBannerBtn.addEventListener('click', closeWelcomeBanner);
+
+// ── Shared login success handler ──────────────────────────────────────────────
+const handleLoginSuccess = async (user, account, isNew = false) => {
+  currentUser = user;
+  currentAccount = account;
+  landing.classList.add('hidden');
+  siteFooter.classList.add('hidden');
+  containerApp.classList.remove('hidden');
+  loginMessage.textContent = '';
+  labelWelcome.textContent = `Welcome back, ${account.username}!`;
+  containerApp.style.opacity = 100;
+
+  // account bar
+  const initials = account.username.slice(0, 2).toUpperCase();
+  document.getElementById('account-avatar').textContent = initials;
+  document.getElementById('account-name').textContent = account.username;
+
+  const dateStr = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date());
+  document.querySelector('.date').textContent = dateStr;
+  document.querySelector('.date2').textContent = dateStr;
+  loginForm.reset();
+  sorted = false;
+  updateUI(account);
+  startLogoutTimer();
+  if (isNew) {
+    await updateDoc(userRef(user.uid), { isNewUser: false });
+    showWelcomeBanner();
+  }
+};
+
+// ── Register Modal ────────────────────────────────────────────────────────────
+showRegisterBtn.addEventListener('click', () =>
+  registerModal.classList.remove('hidden')
+);
+closeRegisterBtn.addEventListener('click', () =>
+  registerModal.classList.add('hidden')
+);
+registerModal.addEventListener('click', e => {
+  if (e.target === registerModal) registerModal.classList.add('hidden');
 });
 
-const depositFor = [];
-for (const mov of movements) if (mov > 0) depositFor.push(mov);
+registerForm.addEventListener('submit', async function (e) {
+  e.preventDefault();
+  const username = document.getElementById('register-username').value.trim();
+  const password = document.getElementById('register-password').value;
 
-const withdrawals = movements.filter(mov => mov < 0); ////////===============
+  try {
+    const email = `${username}@yourbank.app`;
+    const { user } = await createUserWithEmailAndPassword(auth, email, password);
+    await setDoc(userRef(user.uid), {
+      username,
+      movements: [1000],
+      interestRate: 1.2,
+      currency: 'EUR',
+      locale: 'en-US',
+      isNewUser: true,
+    });
+    const account = await loadAccount(user.uid);
+    registerForm.reset();
+    registerModal.classList.add('hidden');
+    await handleLoginSuccess(user, account, true);
+  } catch (err) {
+    const msg =
+      err.code === 'auth/email-already-in-use'
+        ? 'Username already taken'
+        : err.code === 'auth/weak-password'
+        ? 'Password must be at least 6 characters'
+        : 'Registration failed';
+    showError(registerMessage, msg);
+  }
+});
 
-//буде перша буква кожного слова
+// ── Login ─────────────────────────────────────────────────────────────────────
+loginForm.addEventListener('submit', async function (e) {
+  e.preventDefault();
+  const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
 
-btnTransfer.addEventListener('click', function (e) {
+  try {
+    const email = `${username}@yourbank.app`;
+    const { user } = await signInWithEmailAndPassword(auth, email, password);
+    const account = await loadAccount(user.uid);
+    await handleLoginSuccess(user, account, false);
+  } catch {
+    showError(loginMessage, 'Invalid username or password');
+  }
+});
+
+// ── Transfer ──────────────────────────────────────────────────────────────────
+btnTransfer.addEventListener('click', async function (e) {
   e.preventDefault();
   const amount = Number(inputTransferAmount.value);
-  const receiverAcc = accounts.find(
-    acc => acc.username === inputTransferTo.value
-  );
-
+  const receiverUsername = inputTransferTo.value.trim();
   inputTransferAmount.value = inputTransferTo.value = '';
 
-  if (
-    amount > 0 &&
-    receiverAcc.username !== CurrentAccount.username &&
-    receiverAcc &&
-    CurrentAccount.balance >= amount
-  ) {
-    CurrentAccount.movements.push(-amount);
-    receiverAcc.movements.push(amount);
-    updateUI(CurrentAccount);
-  }
-});
+  if (!currentAccount || amount <= 0) return;
+  if (receiverUsername === currentAccount.username) return;
+  if (currentAccount.balance < amount) return;
 
-btnClose.addEventListener('click', function (e) {
-  e.preventDefault();
-  if (
-    Number(inputClosePin.value) === CurrentAccount.pin &&
-    inputCloseUsername.value === CurrentAccount.username
-  ) {
-    const index = accounts.findIndex(
-      acc => acc.username === CurrentAccount.username
+  try {
+    const q = query(
+      collection(db, 'users'),
+      where('username', '==', receiverUsername)
     );
+    const snap = await getDocs(q);
+    if (snap.empty) return alert('User not found');
 
-    accounts.splice(index, 1);
-    containerApp.style.opacity = 0;
-    inputClosePin.value = inputCloseUsername.value = '';
+    const receiverUid = snap.docs[0].id;
+    await addMovement(currentUser.uid, -amount);
+    await addMovement(receiverUid, amount);
+
+    currentAccount = await loadAccount(currentUser.uid);
+    updateUI(currentAccount);
+    startLogoutTimer();
+  } catch (err) {
+    console.error('Transfer error:', err);
   }
 });
 
-let sorted = false;
+// ── Loan ──────────────────────────────────────────────────────────────────────
+btnLoan.addEventListener('click', async function (e) {
+  e.preventDefault();
+  const amount = Math.floor(Number(inputLoanAmount.value));
+  inputLoanAmount.value = '';
 
+  if (!currentAccount || amount <= 0) return;
+  if (!currentAccount.movements.some(m => m >= amount * 0.1)) return;
+
+  try {
+    await addMovement(currentUser.uid, amount);
+    currentAccount = await loadAccount(currentUser.uid);
+    updateUI(currentAccount);
+    startLogoutTimer();
+  } catch (err) {
+    console.error('Loan error:', err);
+  }
+});
+
+// ── Close Account ─────────────────────────────────────────────────────────────
+btnClose.addEventListener('click', async function (e) {
+  e.preventDefault();
+  const confirmUsername = inputCloseUsername.value.trim();
+  const confirmPassword = inputClosePin.value;
+  inputCloseUsername.value = inputClosePin.value = '';
+
+  if (!currentAccount || confirmUsername !== currentAccount.username) return;
+
+  try {
+    const credential = EmailAuthProvider.credential(
+      currentUser.email,
+      confirmPassword
+    );
+    await reauthenticateWithCredential(currentUser, credential);
+    await deleteDoc(userRef(currentUser.uid));
+    await currentUser.delete();
+
+    clearInterval(timerInterval);
+    containerApp.style.opacity = 0;
+    landing.classList.remove('hidden');
+    labelWelcome.textContent = 'Account closed. Goodbye!';
+    currentAccount = null;
+    currentUser = null;
+  } catch (err) {
+    console.error('Close account error:', err);
+  }
+});
+
+// ── Sort ──────────────────────────────────────────────────────────────────────
 btnSort.addEventListener('click', function (e) {
   e.preventDefault();
   sorted = !sorted;
-  displayMovements(CurrentAccount.movements, sorted);
+  displayMovements(currentAccount, sorted);
 });
-
-const grupedMovements = Object.groupBy(movements, movement =>
-  movement > 0 ? 'deposit' : 'withdrawals'
-);
-console.log(grupedMovements);
-
-const grupedByActive = Object.groupBy(accounts, account => {
-  const movss = account.movements.length;
-  if (movss >= 8) return 'very active';
-  if (movss >= 4) return 'active';
-  if (movss >= 1) return 'moderate';
-  return 'inactive';
-});
-
-const groupedAccounts = Object.groupBy(accounts, ({ type }) => type);
-
-const AllDeposits = accounts
-  .map(acc => acc.movements)
-  .flat()
-  .filter(mov => mov > 0)
-  .reduce((sum, curr) => sum + curr, 0);
-console.log(AllDeposits);
-
-//2.
-const AllDepositsOne = accounts
-  .map(acc => acc.movements)
-  .flat()
-  .reduce((count, cur) => (cur >= 1000 ? count++ : count), 0);
-console.log(AllDepositsOne);
-
-//3.
-
-const sums = accounts
-  .flatMap(acc => acc.movements)
-  .reduce(
-    (sums, cur) => {
-      // cur > 0 ? (sums.deposits += cur) : (sums.withdrawals += cur);
-      // return sums;
-      sums[cur > 0 ? 'deposits' : 'withdrawals'] += cur;
-      return sums;
-    },
-    { deposits: 0, withdrawals: 0 }
-  );
-
-console.log(sums);
-
-const capitalize = function (title) {
-  const capitalizeUp = str => str[0].toUpperCase() + str.slice(1);
-  const exceptions = ['a', 'and', 'an', 'but', 'the', 'in'];
-  const titlecase = title
-    .toLowerCase()
-    .split(' ')
-    .map(word => (exceptions.includes(word) ? word : capitalizeUp(word)))
-    .join(' ');
-
-  return titlecase;
-};
-
-console.log(capitalize('this is a nice title'));
-console.log(capitalize('this is a LONG title but not too long'));
-console.log(capitalize('and here is another title with an EXAMPLE'));
-
-/////////////////////////////////////////////////
-/////////////////////////////////////////////////
-// LECTURES
-
-/////////////////////////////////////////////////
-
-// let arr = ['a', 'b', 'c', 'd', 'e'];
-
-// //return new array, from c
-
-// console.log(arr.slice(2));
-// //виеде позиції 2, 3
-// console.log(arr.slice(2, 4));
-// //два останні елементи
-// console.log(arr.slice(-2));
-// console.log(arr.slice(1, -2));
-// console.log(arr.slice()); //буде копія
-// console.log([...arr]); //копія
-
-// //SPLICE ============= змінює оріг масив
-// console.log(arr.splice(2));
-// arr.splice(-1); //++++++++++++ останій елемент видалиться
-// console.log(arr);
-// arr.splice(1, 2); //видалить 2 і 3 елемент
-
-// //REVERSE
-
-// arr = ['a', 'b', 'c', 'd', 'e'];
-// const arr2 = ['j', 'i', 'h', 'g', 'f'];
-// console.log(arr2.reverse()); // змінює оригінальний масив
-// console.log(arr2);
-
-// //CONCAT METHOD ======оригінал не змінює
-// const letters = arr.concat(arr2);
-// console.log(letters);
-
-// //JOIN
-
-// console.log(letters.join(' - ')); //випише весь масив, між елементами буде цей знак
-
-const arr = [23, 11, 64];
-// console.log(arr.at(0)); //те саме, що вивести елемент  з позиції
-
-// console.log(arr.at(-1)); // легке виведення останнього елементу
-//==================працює також із рядками
-
-// for (const movement of movements) {
-//   if (movement > 0) {
-//     console.log(`You deposited ${movement}`);
-//   } else {
-//     console.log(`You withdrew ${Math.abs(movement)}`);
-//   }
-// }
-// console.log(`---------FOREACH------------`);
-// movements.forEach(function (movement, i, arr) {
-//   if (movement > 0) {
-//     console.log(`Movement ${i + 1} You deposited ${movement}`);
-//   } else {
-//     console.log(`Movement ${i + 1}You withdrew ${Math.abs(movement)}`);
-//   }
-// });
-//=============не можна вткористати break continue
-//0: function(200)
-
-// const currencies = new Map([
-//   ['USD', 'United States dollar'],
-//   ['EUR', 'Euro'],
-//   ['GBP', 'Pound sterling'],
-// ]);
-
-// currencies.forEach(function (value, key, map) {
-//   console.log(`${key}: ${value}`);
-// });
-
-// //SET
-// const currenciesUNIQUE = new Set(['USD', 'GBP', 'USD', 'EUR', 'EUR']);
-// console.log(currenciesUNIQUE);
-// currenciesUNIQUE.forEach(function (value, key, map) {});
-
-const eurToUsd = 1.1;
-
-const movementsUSD = movements.map(mov => mov * eurToUsd);
-
-const movementsUSDfor = [];
-for (const mov of movements) {
-  movementsUSDfor.push(mov * eurToUsd);
-}
-
-const movementsDesc = movements.map(
-  (mov, i) =>
-    `Movement ${i + 1}You ${mov > 0 ? 'deposited' : 'withdrew'} ${Math.abs(
-      mov
-    )}`
-);
-
-//ACC -> SNOWBALL
-const balance = movements.reduce((acc, curr) => acc + curr, 0);
-// 0 - з якого числа почнеться додавання
-
-//MAXIMUM VALUE
-
-const max = movements.reduce((acc, mov) => {
-  if (acc > mov) {
-    return acc;
-  } else {
-    return mov;
-  }
-}, movements[0]);
-
-console.log(max);
-const totalDepUSD = movements
-  .filter(mov => mov > 0)
-  .map(mov => mov * eurToUsd)
-  .reduce((acc, mov) => acc + mov, 0);
-
-movements.find(mov => mov < 0); //перший елемент, який задовільняє цю умову

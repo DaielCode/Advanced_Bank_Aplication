@@ -3,160 +3,526 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <link rel="shortcut icon" type="image/png" href="/icon.png" />
-
     <link
-      href="https://fonts.googleapis.com/css?family=Poppins:400,500,600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
-
     <link rel="stylesheet" href="style.css" />
-    <title>Bankist</title>
+    <title>YourBank</title>
   </head>
   <body>
-    <!-- TOP NAVIGATION -->
     <nav>
-      <p class="welcome">Log in to get started</p>
-      <img src="logo.png" alt="Logo" class="logo" />
+      <div class="nav__brand">
+        <svg class="nav__logo-icon" viewBox="0 0 32 32" fill="none">
+          <rect x="4" y="14" width="24" height="14" rx="2" fill="url(#g1)"/>
+          <path d="M4 16L16 6L28 16" stroke="url(#g1)" stroke-width="2.5" stroke-linecap="round"/>
+          <rect x="12" y="20" width="8" height="8" rx="1" fill="#0f0f1a"/>
+          <defs>
+            <linearGradient id="g1" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#3b82f6"/>
+              <stop offset="1" stop-color="#22d3ee"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <span class="nav__brand-name">Your<span>Bank</span></span>
+      </div>
 
-      <!-- Додано id для логін форми -->
+      <button id="toggle-rates" class="nav__rates-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>
+        </svg>
+        Live Rates
+      </button>
+
+      <div class="nav__secure">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        Secured
+      </div>
+
+      <p class="welcome">Log in to get started</p>
+
       <form id="login-form" class="login">
         <input
           type="text"
           id="login-username"
-          placeholder="user"
+          placeholder="Username"
           class="login__input login__input--user"
           required
         />
         <input
           type="password"
           id="login-password"
-          placeholder="PIN"
-          maxlength="4"
+          placeholder="Password"
           class="login__input login__input--pin"
           required
         />
-        <button class="login__btn" type="submit">&rarr;</button>
+        <button class="login__btn" type="submit">Sign In</button>
         <button id="show-register" type="button" class="register-btn">
           Register
         </button>
       </form>
+      <div id="login-message" class="login-message"></div>
     </nav>
 
-    <!-- Модальне вікно для реєстрації -->
     <div id="register-modal" class="modal hidden">
       <div class="modal-content">
         <button id="close-register" class="close-btn">&times;</button>
+        <div class="modal-header">
+          <svg class="modal-icon" viewBox="0 0 32 32" fill="none">
+            <rect x="4" y="14" width="24" height="14" rx="2" fill="url(#g2)"/>
+            <path d="M4 16L16 6L28 16" stroke="url(#g2)" stroke-width="2.5" stroke-linecap="round"/>
+            <rect x="12" y="20" width="8" height="8" rx="1" fill="#0f0f1a"/>
+            <defs>
+              <linearGradient id="g2" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#3b82f6"/>
+                <stop offset="1" stop-color="#22d3ee"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          <h2>Create Account</h2>
+          <p class="modal-subtitle">Join YourBank today</p>
+        </div>
         <form id="register-form" class="register-form">
-          <h2>Register</h2>
-          <input
-            type="text"
-            id="register-username"
-            placeholder="Username"
-            required
-            class="register__input"
-          />
-          <input
-            type="password"
-            id="register-password"
-            placeholder="Password"
-            required
-            class="register__input"
-          />
-          <button type="submit" class="register__btn">Register</button>
-          <div id="register-message"></div>
+          <div class="input-group">
+            <label>Username</label>
+            <input type="text" id="register-username" placeholder="Choose a username" required class="register__input" />
+          </div>
+          <div class="input-group">
+            <label>Password</label>
+            <input type="password" id="register-password" placeholder="Min. 6 characters" required class="register__input" />
+          </div>
+          <button type="submit" class="register__btn">Create Account</button>
+          <div id="register-message" class="register-message"></div>
         </form>
       </div>
     </div>
 
-    <main class="app">
-      <!-- BALANCE -->
-      <div class="balance">
-        <div>
-          <p class="balance__label">Current balance</p>
-          <p class="balance__date">
-            As of <span class="date">05/03/2037</span>
-          </p>
-        </div>
-        <p class="balance__value">0000€</p>
-      </div>
+    <!-- LANDING PAGE -->
+    <section id="landing" class="landing">
 
-      <!-- MOVEMENTS -->
-      <div class="movements">
-        <div class="movements__row">
-          <div class="movements__type movements__type--deposit">2 deposit</div>
-          <div class="movements__date">3 days ago</div>
-          <div class="movements__value">4 000€</div>
-        </div>
-        <div class="movements__row">
-          <div class="movements__type movements__type--withdrawal">
-            1 withdrawal
+      <!-- Hero -->
+      <div class="landing__hero">
+        <div class="landing__hero-content">
+          <div class="landing__badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+            Bank-grade security · ECB live rates
           </div>
-          <div class="movements__date">24/01/2037</div>
-          <div class="movements__value">-378€</div>
+          <h1 class="landing__title">Banking that<br>works for you</h1>
+          <p class="landing__desc">
+            Manage your money, send instant transfers and track spending —
+            all secured by Firebase and powered by real exchange rates.
+          </p>
+          <div class="landing__ctas">
+            <button class="landing__cta-primary" id="landing-register-btn">Open Free Account</button>
+            <button class="landing__cta-secondary" id="landing-signin-btn">
+              Sign In
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="15" height="15">
+                <path d="M5 12h14M13 6l6 6-6 6"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Mock bank card -->
+        <div class="landing__card-wrap">
+          <div class="landing__mock-card">
+            <div class="landing__mock-card__top">
+              <span class="landing__mock-card__brand">YourBank</span>
+              <svg viewBox="0 0 40 30" width="38" height="28" fill="none">
+                <rect x="0" y="5" width="20" height="20" rx="10" fill="rgba(255,255,255,0.3)"/>
+                <rect x="14" y="5" width="20" height="20" rx="10" fill="rgba(255,255,255,0.15)"/>
+              </svg>
+            </div>
+            <div class="landing__mock-card__chip">
+              <svg viewBox="0 0 34 26" width="34" height="26" fill="none">
+                <rect x="1" y="1" width="32" height="24" rx="4" stroke="rgba(255,200,50,0.8)" stroke-width="1.5" fill="rgba(255,200,50,0.15)"/>
+                <line x1="17" y1="1" x2="17" y2="25" stroke="rgba(255,200,50,0.6)" stroke-width="1"/>
+                <line x1="1" y1="9" x2="33" y2="9" stroke="rgba(255,200,50,0.6)" stroke-width="1"/>
+                <line x1="1" y1="17" x2="33" y2="17" stroke="rgba(255,200,50,0.6)" stroke-width="1"/>
+              </svg>
+            </div>
+            <div class="landing__mock-card__balance">€ 12,450.00</div>
+            <div class="landing__mock-card__bottom">
+              <span class="landing__mock-card__number">**** **** **** 4291</span>
+              <span class="landing__mock-card__exp">03/29</span>
+            </div>
+          </div>
+          <!-- Floating stats -->
+          <div class="landing__stat landing__stat--top">
+            <span class="landing__stat__label">This month</span>
+            <span class="landing__stat__value landing__stat__value--green">+€3,240</span>
+          </div>
+          <div class="landing__stat landing__stat--bottom">
+            <span class="landing__stat__label">Transfers</span>
+            <span class="landing__stat__value">12 sent</span>
+          </div>
         </div>
       </div>
 
-      <!-- SUMMARY -->
-      <div class="summary">
-        <p class="summary__label">In</p>
-        <p class="summary__value summary__value--in">0000€</p>
-        <p class="summary__label">Out</p>
-        <p class="summary__value summary__value--out">0000€</p>
-        <p class="summary__label">Interest</p>
-        <p class="summary__value summary__value--interest">0000€</p>
-        <button class="btn--sort">&downarrow; SORT</button>
+      <!-- Live Rates -->
+      <div class="landing__rates-section">
+        <div class="landing__section-header">
+          <div>
+            <h2 class="landing__section-title">Live Exchange Rates</h2>
+            <p class="landing__section-sub">Base: 1 EUR · <span id="landing-rates-time">updating...</span></p>
+          </div>
+          <span class="landing__live-badge">
+            <span class="landing__live-dot"></span>
+            LIVE
+          </span>
+        </div>
+        <div class="landing__rates-grid" id="landing-rates-grid">
+          <!-- filled by JS -->
+        </div>
+        <div class="landing__rates-footer">
+          <p class="landing__rates-source">Real-time data · European Central Bank · via frankfurter.app</p>
+          <button class="landing__view-rates-btn" id="landing-view-rates-btn">
+            View all rates
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14">
+              <path d="M5 12h14M13 6l6 6-6 6"/>
+            </svg>
+          </button>
+        </div>
       </div>
 
-      <!-- OPERATION: TRANSFERS -->
+      <!-- Features -->
+      <div class="landing__features">
+        <div class="landing__feature">
+          <div class="landing__feature-icon landing__feature-icon--blue">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="22" height="22">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </div>
+          <h3>Bank-grade Security</h3>
+          <p>Firebase Authentication with encrypted storage. Your data is protected at every step.</p>
+        </div>
+        <div class="landing__feature">
+          <div class="landing__feature-icon landing__feature-icon--green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="22" height="22">
+              <path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/>
+            </svg>
+          </div>
+          <h3>Instant Transfers</h3>
+          <p>Send money to any YourBank user in real time. Balance updates immediately.</p>
+        </div>
+        <div class="landing__feature">
+          <div class="landing__feature-icon landing__feature-icon--amber">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="22" height="22">
+              <circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 2"/>
+            </svg>
+          </div>
+          <h3>Loan on Demand</h3>
+          <p>Request a loan instantly based on your deposit history. No paperwork needed.</p>
+        </div>
+        <div class="landing__feature">
+          <div class="landing__feature-icon landing__feature-icon--cyan">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="22" height="22">
+              <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
+            </svg>
+          </div>
+          <h3>Multi-currency</h3>
+          <p>View your balance in EUR, USD, GBP, PLN, UAH or CHF with live ECB rates.</p>
+        </div>
+        <div class="landing__feature">
+          <div class="landing__feature-icon landing__feature-icon--purple">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="22" height="22">
+              <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+            </svg>
+          </div>
+          <h3>Full Transaction History</h3>
+          <p>Every deposit, transfer and loan logged in real time and sortable at a click.</p>
+        </div>
+        <div class="landing__feature">
+          <div class="landing__feature-icon landing__feature-icon--red">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="22" height="22">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+          </div>
+          <h3>€1,000 Welcome Bonus</h3>
+          <p>Every new account gets a €1,000 welcome gift credited instantly on registration.</p>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer" id="site-footer">
+      <div class="footer__inner">
+        <div class="footer__brand">
+          <div class="footer__logo">
+            <svg viewBox="0 0 32 32" fill="none" width="28" height="28">
+              <rect x="4" y="14" width="24" height="14" rx="2" fill="url(#fg1)"/>
+              <path d="M4 16L16 6L28 16" stroke="url(#fg1)" stroke-width="2.5" stroke-linecap="round"/>
+              <rect x="12" y="20" width="8" height="8" rx="1" fill="#0c1120"/>
+              <defs>
+                <linearGradient id="fg1" x1="4" y1="6" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#60a5fa"/>
+                  <stop offset="100%" stop-color="#3b82f6"/>
+                </linearGradient>
+              </defs>
+            </svg>
+            <span class="footer__logo-text">YourBank</span>
+          </div>
+          <p class="footer__tagline">Modern banking for everyone.<br>Secure, fast, and always available.</p>
+          <div class="footer__socials">
+            <a href="#" class="footer__social" aria-label="GitHub">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+            </a>
+            <a href="#" class="footer__social" aria-label="Twitter">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            </a>
+            <a href="#" class="footer__social" aria-label="LinkedIn">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+            </a>
+          </div>
+        </div>
+
+        <div class="footer__links">
+          <div class="footer__col">
+            <h4 class="footer__col-title">Product</h4>
+            <ul>
+              <li><a href="#">Features</a></li>
+              <li><a href="#">Live Rates</a></li>
+              <li><a href="#">Security</a></li>
+              <li><a href="#">Pricing</a></li>
+            </ul>
+          </div>
+          <div class="footer__col">
+            <h4 class="footer__col-title">Company</h4>
+            <ul>
+              <li><a href="#">About Us</a></li>
+              <li><a href="#">Careers</a></li>
+              <li><a href="#">Blog</a></li>
+              <li><a href="#">Press</a></li>
+            </ul>
+          </div>
+          <div class="footer__col">
+            <h4 class="footer__col-title">Legal</h4>
+            <ul>
+              <li><a href="#">Privacy Policy</a></li>
+              <li><a href="#">Terms of Service</a></li>
+              <li><a href="#">Cookie Policy</a></li>
+              <li><a href="#">Compliance</a></li>
+            </ul>
+          </div>
+          <div class="footer__col">
+            <h4 class="footer__col-title">Support</h4>
+            <ul>
+              <li><a href="#">Help Center</a></li>
+              <li><a href="#">Contact Us</a></li>
+              <li><a href="#">Status</a></li>
+              <li><a href="#">Community</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer__bottom">
+        <span class="footer__copy">&copy; 2025 YourBank. All rights reserved.</span>
+        <div class="footer__badges">
+          <span class="footer__badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            SSL Secured
+          </span>
+          <span class="footer__badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            256-bit Encryption
+          </span>
+          <span class="footer__badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><polyline points="20 6 9 17 4 12"/></svg>
+            GDPR Compliant
+          </span>
+        </div>
+      </div>
+    </footer>
+
+    <!-- RATES PANEL -->
+    <div id="rates-panel" class="rates-panel hidden">
+      <div class="rates-panel__header">
+        <div>
+          <h3 class="rates-panel__title">Live Exchange Rates</h3>
+          <p class="rates-panel__subtitle">Base: 1 EUR · <span id="rates-date">loading...</span></p>
+        </div>
+        <button id="close-rates-panel" class="rates-panel__close">&times;</button>
+      </div>
+      <div class="rates-panel__base">
+        <span class="rates-panel__base-label">Base currency</span>
+        <div class="rates-panel__base-btns" id="rates-base-btns">
+          <button class="rates-base-btn active" data-base="EUR">EUR</button>
+          <button class="rates-base-btn" data-base="USD">USD</button>
+          <button class="rates-base-btn" data-base="GBP">GBP</button>
+          <button class="rates-base-btn" data-base="PLN">PLN</button>
+          <button class="rates-base-btn" data-base="UAH">UAH</button>
+          <button class="rates-base-btn" data-base="CHF">CHF</button>
+        </div>
+      </div>
+
+      <div class="rates-panel__cols">
+        <span></span><span>Currency</span><span class="rates-col-buy">BUY</span><span class="rates-col-sell">SELL</span>
+      </div>
+
+      <div id="rates-list" class="rates-list">
+        <div class="rates-loading">Fetching rates...</div>
+      </div>
+      <div class="rates-panel__footer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13">
+          <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.49"/>
+        </svg>
+        <span id="rates-updated-time">Updating...</span>
+        <a href="https://www.frankfurter.app" target="_blank" rel="noopener">ECB via frankfurter.app</a>
+      </div>
+    </div>
+
+    <main class="app hidden">
+      <div class="currency-selector">
+        <span class="currency-selector__label">Display currency</span>
+        <div class="currency-selector__btns">
+          <button class="currency-btn active" data-currency="EUR">EUR €</button>
+          <button class="currency-btn" data-currency="USD">USD $</button>
+          <button class="currency-btn" data-currency="GBP">GBP £</button>
+          <button class="currency-btn" data-currency="PLN">PLN zł</button>
+          <button class="currency-btn" data-currency="UAH">UAH ₴</button>
+          <button class="currency-btn" data-currency="CHF">CHF ₣</button>
+        </div>
+      </div>
+
+      <div class="account-bar">
+        <div class="account-bar__user">
+          <div class="account-bar__avatar" id="account-avatar">A</div>
+          <div>
+            <p class="account-bar__name" id="account-name">—</p>
+            <p class="account-bar__sub">Personal Account</p>
+          </div>
+        </div>
+        <div class="account-bar__meta">
+          <div class="account-bar__meta-item">
+            <span class="account-bar__meta-label">Session</span>
+            <span class="account-bar__meta-value timer">00:00</span>
+          </div>
+          <div class="account-bar__meta-item">
+            <span class="account-bar__meta-label">Date</span>
+            <span class="account-bar__meta-value date">—</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="balance">
+        <div class="balance__info">
+          <p class="balance__label">Current Balance</p>
+          <p class="balance__date">As of <span class="date2">—</span></p>
+        </div>
+        <p class="balance__value">€0.00</p>
+      </div>
+
+      <div class="movements"></div>
+
+      <div class="summary">
+        <div class="summary__group">
+          <p class="summary__label">Income</p>
+          <p class="summary__value summary__value--in">€0.00</p>
+        </div>
+        <div class="summary__group">
+          <p class="summary__label">Expenses</p>
+          <p class="summary__value summary__value--out">€0.00</p>
+        </div>
+        <div class="summary__group">
+          <p class="summary__label">Interest</p>
+          <p class="summary__value summary__value--interest">€0.00</p>
+        </div>
+        <button class="btn--sort">&#8595; Sort</button>
+      </div>
+
       <div class="operation operation--transfer">
-        <h2>Transfer money</h2>
+        <div class="operation__header">
+          <div class="operation__icon operation__icon--transfer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/>
+            </svg>
+          </div>
+          <h2>Transfer Money</h2>
+        </div>
         <form class="form form--transfer">
-          <input type="text" class="form__input form__input--to" />
-          <input type="number" class="form__input form__input--amount" />
+          <input type="text" class="form__input form__input--to" placeholder="Recipient" />
+          <input type="number" class="form__input form__input--amount" placeholder="Amount" />
           <button class="form__btn form__btn--transfer">&rarr;</button>
           <label class="form__label">Transfer to</label>
-          <label class="form__label">Amount</label>
+          <label class="form__label">Amount (€)</label>
         </form>
       </div>
 
-      <!-- OPERATION: LOAN -->
       <div class="operation operation--loan">
-        <h2>Request loan</h2>
+        <div class="operation__header">
+          <div class="operation__icon operation__icon--loan">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <circle cx="12" cy="12" r="9"/>
+              <path d="M12 6v6l4 2"/>
+            </svg>
+          </div>
+          <h2>Request Loan</h2>
+        </div>
         <form class="form form--loan">
-          <input type="number" class="form__input form__input--loan-amount" />
+          <input type="number" class="form__input form__input--loan-amount" placeholder="Amount" />
           <button class="form__btn form__btn--loan">&rarr;</button>
-          <label class="form__label form__label--loan">Amount</label>
+          <label class="form__label form__label--loan">Amount (€)</label>
         </form>
       </div>
 
-      <!-- OPERATION: CLOSE -->
       <div class="operation operation--close">
-        <h2>Close account</h2>
+        <div class="operation__header">
+          <div class="operation__icon operation__icon--close">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1"/>
+            </svg>
+          </div>
+          <h2>Close Account</h2>
+        </div>
         <form class="form form--close">
-          <input type="text" class="form__input form__input--user" />
-          <input
-            type="password"
-            maxlength="6"
-            class="form__input form__input--pin"
-          />
+          <input type="text" class="form__input form__input--user" placeholder="Username" />
+          <input type="password" class="form__input form__input--pin" placeholder="Password" />
           <button class="form__btn form__btn--close">&rarr;</button>
           <label class="form__label">Confirm user</label>
-          <label class="form__label">Confirm PIN</label>
+          <label class="form__label">Confirm password</label>
         </form>
       </div>
 
-      <!-- LOGOUT TIMER -->
-      <p class="logout-timer">
-        You will be logged out in <span class="timer">05:00</span>
-      </p>
     </main>
 
-    <!-- <footer>
-      &copy; by Jonas Schmedtmann. Don't claim as your own :)
-    </footer> -->
+    <!-- WELCOME BONUS BANNER -->
+    <div id="welcome-banner" class="welcome-banner hidden">
+      <div class="welcome-banner__card">
+        <button class="welcome-banner__close" id="close-welcome-banner">&times;</button>
 
-    <script src="script.js"></script>
+        <div class="welcome-banner__icon-wrap">
+          <svg viewBox="0 0 48 48" fill="none">
+            <rect x="6" y="22" width="36" height="22" rx="3" fill="#064e3b" stroke="#10b981" stroke-width="1.5"/>
+            <rect x="6" y="14" width="36" height="10" rx="3" fill="#065f46" stroke="#10b981" stroke-width="1.5"/>
+            <path d="M24 14 C24 14 16 10 16 6 C16 3 19 2 21 4 C22 5 24 8 24 14Z" fill="#10b981"/>
+            <path d="M24 14 C24 14 32 10 32 6 C32 3 29 2 27 4 C26 5 24 8 24 14Z" fill="#10b981"/>
+            <rect x="22" y="14" width="4" height="30" rx="1" fill="#10b981"/>
+            <rect x="6" y="22" width="36" height="2" rx="1" fill="#10b981" opacity="0.4"/>
+          </svg>
+        </div>
+
+        <div class="welcome-banner__amount">+ €1,000.00</div>
+        <h3 class="welcome-banner__title">Welcome Bonus Credited!</h3>
+        <p class="welcome-banner__desc">
+          As a thank you for opening your first account with
+          <strong>YourBank</strong>, we've added a
+          <strong>€1,000 welcome bonus</strong> — already visible in your
+          transactions. Start banking smarter today.
+        </p>
+
+        <div class="welcome-banner__progress-wrap">
+          <div class="welcome-banner__progress-bar" id="banner-progress-bar"></div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="script.js"></script>
   </body>
 </html>
