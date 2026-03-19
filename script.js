@@ -23,14 +23,7 @@ import {
 } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js';
 
 // ── Firebase init ─────────────────────────────────────────────────────────────
-const firebaseConfig = {
-  apiKey: 'AIzaSyAkDfKV0hAb3TCy_veb3HM36-EVgysr4es',
-  authDomain: 'yourbank-24b06.firebaseapp.com',
-  projectId: 'yourbank-24b06',
-  storageBucket: 'yourbank-24b06.firebasestorage.app',
-  messagingSenderId: '672073381633',
-  appId: '1:672073381633:web:ffc5a3b60c8f6d32660d00',
-};
+import { firebaseConfig } from './firebase-config.js';
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
