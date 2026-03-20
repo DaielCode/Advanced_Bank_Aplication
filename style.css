@@ -36,6 +36,21 @@ html {
   overscroll-behavior: none;
 }
 
+/* ── DEMO BAR ─────────────────────────────────────────────────────────────── */
+.demo-bar {
+  background: rgba(245, 158, 11, 0.12);
+  border-bottom: 1px solid rgba(245, 158, 11, 0.25);
+  color: #f59e0b;
+  font-size: 1.3rem;
+  font-weight: 500;
+  padding: 0.8rem 2.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+  text-align: center;
+}
+
 body {
   font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
   background-color: var(--bg);
