@@ -710,6 +710,25 @@ nav {
 
 .register__input::placeholder { color: var(--text-3); }
 
+.register__input.input--error {
+  border-color: var(--red) !important;
+  background: rgba(239,68,68,0.05) !important;
+  box-shadow: 0 0 0 3px rgba(239,68,68,0.12) !important;
+}
+
+.iti-wrap .input--error + .iti__selected-flag,
+.iti-wrap:has(.input--error) .iti__flag-container {
+  border-color: var(--red) !important;
+}
+
+.field-error {
+  display: block;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--red);
+  margin-top: 0.5rem;
+}
+
 .input-hint {
   font-size: 1.15rem;
   color: var(--text-3);

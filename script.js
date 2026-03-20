@@ -453,35 +453,88 @@ document.querySelectorAll('.pwd-toggle').forEach(btn => {
   });
 });
 
+// ── Field validation helpers ──────────────────────────────────────────────────
+const setFieldError = (id, msg) => {
+  const input = document.getElementById(id);
+  if (!input) return;
+  input.classList.add('input--error');
+  let hint = input.closest('.input-group')?.querySelector('.field-error');
+  if (!hint) {
+    hint = document.createElement('span');
+    hint.className = 'field-error';
+    const wrap = input.closest('.input-pwd-wrap') || input.closest('.iti-wrap') || input;
+    wrap.insertAdjacentElement('afterend', hint);
+  }
+  hint.textContent = msg;
+};
+
+const clearFieldError = id => {
+  const input = document.getElementById(id);
+  if (!input) return;
+  input.classList.remove('input--error');
+  input.closest('.input-group')?.querySelector('.field-error')?.remove();
+};
+
+const clearAllFieldErrors = panel => {
+  panel.querySelectorAll('.input--error').forEach(el => el.classList.remove('input--error'));
+  panel.querySelectorAll('.field-error').forEach(el => el.remove());
+};
+
+// Clear error on input
+['reg-firstname','reg-lastname','reg-dob','reg-phone','reg-email',
+ 'register-username','register-password','reg-confirm-pwd'].forEach(id => {
+  document.getElementById(id)?.addEventListener('input', () => clearFieldError(id));
+});
+
 // Step navigation
 document.getElementById('reg-next-1').addEventListener('click', () => {
+  const panel = document.getElementById('reg-panel-1');
+  clearAllFieldErrors(panel);
+  let hasError = false;
+
   const firstName = document.getElementById('reg-firstname').value.trim();
   const lastName  = document.getElementById('reg-lastname').value.trim();
   const dob       = document.getElementById('reg-dob').value;
   const email     = document.getElementById('reg-email').value.trim();
-  const regMsg    = document.getElementById('register-message');
-  if (!firstName || !lastName || !dob || !email) {
-    return showError(regMsg, 'Please fill in all fields');
+
+  if (!firstName) { setFieldError('reg-firstname', 'First name is required'); hasError = true; }
+  if (!lastName)  { setFieldError('reg-lastname',  'Last name is required');  hasError = true; }
+  if (!dob) {
+    setFieldError('reg-dob', 'Date of birth is required'); hasError = true;
+  } else {
+    const age = (new Date() - new Date(dob)) / (365.25 * 24 * 3600 * 1000);
+    if (age < 18) { setFieldError('reg-dob', 'You must be at least 18 years old'); hasError = true; }
   }
-  if (!iti.isValidNumber()) {
-    return showError(regMsg, 'Please enter a valid phone number');
+  if (!iti.isValidNumber()) { setFieldError('reg-phone', 'Enter a valid phone number'); hasError = true; }
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    setFieldError('reg-email', 'Enter a valid email address'); hasError = true;
   }
-  const age = (new Date() - new Date(dob)) / (365.25 * 24 * 3600 * 1000);
-  if (age < 18) return showError(regMsg, 'You must be at least 18 years old');
-  goToRegStep(2);
+
+  if (!hasError) goToRegStep(2);
 });
 
 document.getElementById('reg-back-2').addEventListener('click', () => goToRegStep(1));
 
 document.getElementById('reg-next-2').addEventListener('click', () => {
+  const panel = document.getElementById('reg-panel-2');
+  clearAllFieldErrors(panel);
+  let hasError = false;
+
   const username = document.getElementById('register-username').value.trim();
   const password = document.getElementById('register-password').value;
   const confirm  = document.getElementById('reg-confirm-pwd').value;
-  const registerMessage = document.getElementById('register-message');
-  if (!username || username.includes(' ')) return showError(registerMessage, 'Username must have no spaces');
-  if (password.length < 8) return showError(registerMessage, 'Password must be at least 8 characters');
-  if (password !== confirm) return showError(registerMessage, 'Passwords do not match');
-  goToRegStep(3);
+
+  if (!username || username.includes(' ')) {
+    setFieldError('register-username', 'Username is required and must have no spaces'); hasError = true;
+  }
+  if (password.length < 8) {
+    setFieldError('register-password', 'Password must be at least 8 characters'); hasError = true;
+  }
+  if (password && confirm && password !== confirm) {
+    setFieldError('reg-confirm-pwd', 'Passwords do not match'); hasError = true;
+  }
+
+  if (!hasError) goToRegStep(3);
 });
 
 document.getElementById('reg-back-3').addEventListener('click', () => goToRegStep(2));
@@ -491,7 +544,7 @@ registerForm.addEventListener('submit', async function (e) {
   e.preventDefault();
   const registerMessage = document.getElementById('register-message');
   if (!document.getElementById('reg-terms').checked || !document.getElementById('reg-age').checked) {
-    return showError(registerMessage, 'Please accept the terms to continue');
+    return showError(registerMessage, 'Please accept both checkboxes to continue');
   }
   const username  = document.getElementById('register-username').value.trim();
   const password  = document.getElementById('register-password').value;
