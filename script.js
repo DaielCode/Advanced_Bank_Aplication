@@ -363,9 +363,14 @@ const handleLoginSuccess = async (user, account, isNew = false) => {
   containerApp.style.opacity = 100;
 
   // account bar
-  const initials = account.username.slice(0, 2).toUpperCase();
+  const fullName = account.firstName && account.lastName
+    ? `${account.firstName} ${account.lastName}`
+    : account.username;
+  const initials = account.firstName && account.lastName
+    ? `${account.firstName[0]}${account.lastName[0]}`.toUpperCase()
+    : account.username.slice(0, 2).toUpperCase();
   document.getElementById('account-avatar').textContent = initials;
-  document.getElementById('account-name').textContent = account.username;
+  document.getElementById('account-name').textContent = fullName;
 
   const dateStr = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date());
   document.querySelector('.date').textContent = dateStr;
@@ -381,26 +386,116 @@ const handleLoginSuccess = async (user, account, isNew = false) => {
 };
 
 // ── Register Modal ────────────────────────────────────────────────────────────
-showRegisterBtn.addEventListener('click', () =>
-  registerModal.classList.remove('hidden')
-);
-closeRegisterBtn.addEventListener('click', () =>
-  registerModal.classList.add('hidden')
-);
+// ── Register Modal open/close ─────────────────────────────────────────────────
+showRegisterBtn.addEventListener('click', () => {
+  registerModal.classList.remove('hidden');
+  goToRegStep(1);
+});
+closeRegisterBtn.addEventListener('click', () => registerModal.classList.add('hidden'));
 registerModal.addEventListener('click', e => {
   if (e.target === registerModal) registerModal.classList.add('hidden');
 });
 
-registerForm.addEventListener('submit', async function (e) {
-  e.preventDefault();
+// ── Registration wizard helpers ───────────────────────────────────────────────
+const goToRegStep = step => {
+  document.querySelectorAll('.reg-panel').forEach((p, i) => {
+    p.classList.toggle('active', i + 1 === step);
+  });
+  document.querySelectorAll('.reg-step').forEach((s, i) => {
+    s.classList.remove('active', 'done');
+    if (i + 1 === step) s.classList.add('active');
+    if (i + 1 < step) s.classList.add('done');
+  });
+  document.querySelectorAll('.reg-step__line').forEach((l, i) => {
+    l.classList.toggle('done', i + 1 < step);
+  });
+};
+
+// Password strength
+document.getElementById('register-password').addEventListener('input', function () {
+  const val = this.value;
+  const bar = document.getElementById('pwd-strength-bar');
+  const label = document.getElementById('pwd-strength-label');
+  let score = 0;
+  if (val.length >= 8) score++;
+  if (/[A-Z]/.test(val)) score++;
+  if (/[0-9]/.test(val)) score++;
+  if (/[^A-Za-z0-9]/.test(val)) score++;
+  const levels = [
+    { w: '0%',   color: '',                  text: '' },
+    { w: '25%',  color: 'var(--red)',         text: 'Weak' },
+    { w: '50%',  color: 'var(--amber)',       text: 'Fair' },
+    { w: '75%',  color: '#60a5fa',            text: 'Good' },
+    { w: '100%', color: 'var(--green)',        text: 'Strong' },
+  ];
+  const lvl = val.length === 0 ? levels[0] : levels[score] || levels[1];
+  bar.style.width = lvl.w;
+  bar.style.background = lvl.color;
+  label.textContent = lvl.text;
+  label.style.color = lvl.color;
+});
+
+// Password visibility toggles
+document.querySelectorAll('.pwd-toggle').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const input = document.getElementById(btn.dataset.target);
+    input.type = input.type === 'password' ? 'text' : 'password';
+  });
+});
+
+// Step navigation
+document.getElementById('reg-next-1').addEventListener('click', () => {
+  const firstName = document.getElementById('reg-firstname').value.trim();
+  const lastName  = document.getElementById('reg-lastname').value.trim();
+  const dob       = document.getElementById('reg-dob').value;
+  const phone     = document.getElementById('reg-phone').value.trim();
+  const email     = document.getElementById('reg-email').value.trim();
+  if (!firstName || !lastName || !dob || !phone || !email) {
+    return showError(document.getElementById('register-message'), 'Please fill in all fields');
+  }
+  const age = (new Date() - new Date(dob)) / (365.25 * 24 * 3600 * 1000);
+  if (age < 18) return showError(document.getElementById('register-message'), 'You must be at least 18 years old');
+  goToRegStep(2);
+});
+
+document.getElementById('reg-back-2').addEventListener('click', () => goToRegStep(1));
+
+document.getElementById('reg-next-2').addEventListener('click', () => {
   const username = document.getElementById('register-username').value.trim();
   const password = document.getElementById('register-password').value;
+  const confirm  = document.getElementById('reg-confirm-pwd').value;
+  const registerMessage = document.getElementById('register-message');
+  if (!username || username.includes(' ')) return showError(registerMessage, 'Username must have no spaces');
+  if (password.length < 8) return showError(registerMessage, 'Password must be at least 8 characters');
+  if (password !== confirm) return showError(registerMessage, 'Passwords do not match');
+  goToRegStep(3);
+});
+
+document.getElementById('reg-back-3').addEventListener('click', () => goToRegStep(2));
+
+// ── Register submit ───────────────────────────────────────────────────────────
+registerForm.addEventListener('submit', async function (e) {
+  e.preventDefault();
+  const registerMessage = document.getElementById('register-message');
+  if (!document.getElementById('reg-terms').checked || !document.getElementById('reg-age').checked) {
+    return showError(registerMessage, 'Please accept the terms to continue');
+  }
+  const username  = document.getElementById('register-username').value.trim();
+  const password  = document.getElementById('register-password').value;
+  const firstName = document.getElementById('reg-firstname').value.trim();
+  const lastName  = document.getElementById('reg-lastname').value.trim();
+  const dob       = document.getElementById('reg-dob').value;
+  const phone     = document.getElementById('reg-phone').value.trim();
 
   try {
     const email = `${username}@yourbank.app`;
     const { user } = await createUserWithEmailAndPassword(auth, email, password);
     await setDoc(userRef(user.uid), {
       username,
+      firstName,
+      lastName,
+      dob,
+      phone,
       movements: [1000],
       interestRate: 1.2,
       currency: 'EUR',
@@ -410,14 +505,15 @@ registerForm.addEventListener('submit', async function (e) {
     const account = await loadAccount(user.uid);
     registerForm.reset();
     registerModal.classList.add('hidden');
+    goToRegStep(1);
     await handleLoginSuccess(user, account, true);
   } catch (err) {
     const msg =
       err.code === 'auth/email-already-in-use'
         ? 'Username already taken'
         : err.code === 'auth/weak-password'
-        ? 'Password must be at least 6 characters'
-        : 'Registration failed';
+        ? 'Password must be at least 8 characters'
+        : 'Registration failed. Try again.';
     showError(registerMessage, msg);
   }
 });
