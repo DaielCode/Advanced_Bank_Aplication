@@ -906,6 +906,73 @@ nav {
   background: var(--surface-2);
 }
 
+/* ── intl-tel-input override ──────────────────────────────────────────────── */
+.iti-wrap { width: 100%; }
+
+.iti { width: 100%; }
+
+.iti__tel-input {
+  background: var(--surface-2) !important;
+  border: 1.5px solid var(--border) !important;
+  color: var(--text-1) !important;
+  font-family: inherit !important;
+  font-size: 1.45rem !important;
+  font-weight: 500 !important;
+  padding: 1.1rem 1.4rem !important;
+  border-radius: var(--radius-sm) !important;
+  outline: none !important;
+  width: 100% !important;
+  transition: border-color 0.2s, box-shadow 0.2s !important;
+}
+
+.iti__tel-input:focus {
+  border-color: var(--primary) !important;
+  background: rgba(59,130,246,0.04) !important;
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.12) !important;
+}
+
+.iti__flag-container {
+  background: var(--surface-2) !important;
+  border: 1.5px solid var(--border) !important;
+  border-right: none !important;
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm) !important;
+}
+
+.iti__selected-dial-code {
+  color: var(--text-1) !important;
+  font-size: 1.35rem !important;
+  font-family: inherit !important;
+}
+
+.iti__dropdown-content {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-sm) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+.iti__search-input {
+  background: var(--surface-2) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-1) !important;
+  font-family: inherit !important;
+  font-size: 1.35rem !important;
+  border-radius: 6px !important;
+  padding: 0.7rem 1rem !important;
+}
+
+.iti__country {
+  color: var(--text-1) !important;
+  font-size: 1.35rem !important;
+}
+
+.iti__country.iti__highlight,
+.iti__country:hover {
+  background: var(--surface-2) !important;
+}
+
+.iti__dial-code { color: var(--text-3) !important; }
+
 /* Responsive */
 @media (max-width: 600px) {
   .modal {

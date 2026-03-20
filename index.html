@@ -9,6 +9,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@23/build/css/intlTelInput.css"/>
     <title>YourBank</title>
   </head>
   <body>
@@ -121,7 +122,9 @@
               </div>
               <div class="input-group">
                 <label>Phone Number</label>
-                <input type="tel" id="reg-phone" placeholder="+380 XX XXX XX XX" required class="register__input" />
+                <div class="iti-wrap">
+                  <input type="tel" id="reg-phone" placeholder="Enter phone number" required class="register__input" />
+                </div>
               </div>
             </div>
             <div class="input-group">
@@ -637,6 +640,7 @@
       </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@23/build/js/intlTelInput.min.js"></script>
     <script type="module" src="script.js"></script>
   </body>
 </html>

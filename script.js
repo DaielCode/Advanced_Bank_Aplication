@@ -385,7 +385,15 @@ const handleLoginSuccess = async (user, account, isNew = false) => {
   }
 };
 
-// ── Register Modal ────────────────────────────────────────────────────────────
+// ── intl-tel-input init ───────────────────────────────────────────────────────
+const phoneInput = document.getElementById('reg-phone');
+const iti = window.intlTelInput(phoneInput, {
+  initialCountry: 'ua',
+  preferredCountries: ['ua', 'pl', 'de', 'gb', 'us'],
+  separateDialCode: true,
+  utilsScript: 'https://cdn.jsdelivr.net/npm/intl-tel-input@23/build/js/utils.js',
+});
+
 // ── Register Modal open/close ─────────────────────────────────────────────────
 showRegisterBtn.addEventListener('click', () => {
   registerModal.classList.remove('hidden');
@@ -450,13 +458,16 @@ document.getElementById('reg-next-1').addEventListener('click', () => {
   const firstName = document.getElementById('reg-firstname').value.trim();
   const lastName  = document.getElementById('reg-lastname').value.trim();
   const dob       = document.getElementById('reg-dob').value;
-  const phone     = document.getElementById('reg-phone').value.trim();
   const email     = document.getElementById('reg-email').value.trim();
-  if (!firstName || !lastName || !dob || !phone || !email) {
-    return showError(document.getElementById('register-message'), 'Please fill in all fields');
+  const regMsg    = document.getElementById('register-message');
+  if (!firstName || !lastName || !dob || !email) {
+    return showError(regMsg, 'Please fill in all fields');
+  }
+  if (!iti.isValidNumber()) {
+    return showError(regMsg, 'Please enter a valid phone number');
   }
   const age = (new Date() - new Date(dob)) / (365.25 * 24 * 3600 * 1000);
-  if (age < 18) return showError(document.getElementById('register-message'), 'You must be at least 18 years old');
+  if (age < 18) return showError(regMsg, 'You must be at least 18 years old');
   goToRegStep(2);
 });
 
@@ -487,7 +498,7 @@ registerForm.addEventListener('submit', async function (e) {
   const firstName = document.getElementById('reg-firstname').value.trim();
   const lastName  = document.getElementById('reg-lastname').value.trim();
   const dob       = document.getElementById('reg-dob').value;
-  const phone     = document.getElementById('reg-phone').value.trim();
+  const phone     = iti.getNumber();
 
   try {
     const email = `${username}@yourbank.app`;
