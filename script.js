@@ -409,6 +409,8 @@ const goToRegStep = step => {
   document.querySelectorAll('.reg-step__line').forEach((l, i) => {
     l.classList.toggle('done', i + 1 < step);
   });
+  const msg = document.getElementById('register-message');
+  if (msg) { msg.textContent = ''; msg.style.color = ''; }
 };
 
 // Password strength
