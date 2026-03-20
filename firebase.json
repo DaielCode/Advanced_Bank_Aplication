@@ -1,0 +1,18 @@
+{
+  "hosting": {
+    "site": "yourbankapp",
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      ".git",
+      ".gitignore",
+      "node_modules"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}
