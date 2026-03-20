@@ -586,6 +586,7 @@ nav {
   display: flex;
   align-items: center;
   margin-bottom: 2.8rem;
+  padding-right: 3.6rem;
 }
 
 .reg-step {
